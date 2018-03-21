@@ -1,3 +1,14 @@
+var im = require('istanbul-middleware'),
+    isCoverageEnabled = true;
+
+//before your code is require()-ed, hook the loader for coverage
+if (isCoverageEnabled) {
+    console.log('Hook loader for coverage - ensure this is not production!');
+    im.hookLoader(__dirname);
+        // cover all files except under node_modules
+        // see API for other options
+}
+
 var express = require('express'),
         cors = require('cors'),
 	marqdown = require('./marqdown.js'),
@@ -8,31 +19,23 @@ var express = require('express'),
 	study = require('./routes/study.js'),
 	admin = require('./routes/admin.js');
 
-  var im = require('istanbul-middleware'),
-    isCoverageEnabled = true;
 
 var app = express();
-//before your code is require()-ed, hook the loader for coverage
-if (isCoverageEnabled) {
-    console.log('Hook loader for coverage - ensure this is not production!');
-    im.hookLoader(__dirname);
-        // cover all files except under node_modules
-        // see API for other options
-}
+
 // set up basic middleware
 // ...
 
+app.configure(function () {
+    app.use(express.logger('dev'));     /* 'default', 'short', 'tiny', 'dev' */
+    app.use(express.bodyParser());
+    // app.use('/coverage', im.createHandler());
+});
 // add the coverage handler
 if (isCoverageEnabled) {
     //enable coverage endpoints under /coverage
     app.use('/coverage', im.createHandler());
 }
 
-app.configure(function () {
-    app.use(express.logger('dev'));     /* 'default', 'short', 'tiny', 'dev' */
-    app.use(express.bodyParser());
-    app.use('/coverage', im.createHandler());
-});
 
 var whitelist = ['http://chrisparnin.me', 'http://pythontutor.com', 'http://happyface.io', 'http://happyface.io:8003', 'http://happyface.io/hf.html'];
 var corsOptions = {
